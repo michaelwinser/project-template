@@ -57,7 +57,7 @@ describe('ApiClient', () => {
     });
 
     it('should throw ApiError when not authenticated', async () => {
-      mockFetch.mockResolvedValueOnce({
+      const mockErrorResponse = {
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
@@ -65,9 +65,12 @@ describe('ApiClient', () => {
           error: 'not_authenticated',
           message: 'Not authenticated',
         }),
-      });
+      };
 
+      mockFetch.mockResolvedValueOnce(mockErrorResponse);
       await expect(client.getCurrentUser()).rejects.toThrow(ApiError);
+
+      mockFetch.mockResolvedValueOnce(mockErrorResponse);
       await expect(client.getCurrentUser()).rejects.toMatchObject({
         statusCode: 401,
         errorCode: 'not_authenticated',
