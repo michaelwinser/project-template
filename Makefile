@@ -1,4 +1,5 @@
 .PHONY: help build test test-all test-ci clean up down review review-all
+.PHONY: docker-dev docker-shell docker-build docker-clean
 
 # Default target
 help:
@@ -10,6 +11,12 @@ help:
 	@echo "  make up         - Start all services"
 	@echo "  make down       - Stop all services"
 	@echo "  make clean      - Remove build artifacts"
+	@echo ""
+	@echo "Docker targets:"
+	@echo "  make docker-dev   - Build dev container"
+	@echo "  make docker-shell - Shell into dev container"
+	@echo "  make docker-build - Build production images"
+	@echo "  make docker-clean - Remove Docker images/volumes"
 	@echo ""
 	@echo "Review targets:"
 	@echo "  make review     - Run adaptive reviews"
@@ -81,3 +88,16 @@ cli-%:
 
 web-%:
 	$(MAKE) -C web $*
+
+# Docker targets
+docker-dev:
+	docker-compose build dev
+
+docker-shell:
+	docker-compose run --rm dev
+
+docker-build:
+	docker-compose build server
+
+docker-clean:
+	docker-compose down -v --rmi local

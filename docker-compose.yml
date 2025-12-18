@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # Production server
   server:
     build:
       context: ./server
@@ -17,6 +18,10 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-debug}
       - LOG_FORMAT=${LOG_FORMAT:-json}
       - ENV=${ENV:-development}
+      - WEB_DIR=/app/web
+    volumes:
+      - ./web/public:/app/web/public:ro
+      - ./web/dist:/app/web/dist:ro
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
       interval: 10s
@@ -24,9 +29,31 @@ services:
       retries: 3
       start_period: 5s
 
-  # Future services can be added here:
-  # web:
-  #   build:
-  #     context: ./web
-  #   depends_on:
-  #     - server
+  # Development container with all build tools
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/workspace
+      - go-mod-cache:/home/dev/go/pkg/mod
+      - node-modules-client:/workspace/client/node_modules
+      - node-modules-web:/workspace/web/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_REDIRECT_URL=${GOOGLE_REDIRECT_URL:-http://localhost:8080/auth/callback}
+      - SESSION_SECRET=${SESSION_SECRET:-dev-secret-change-in-production}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - ENV=${ENV:-development}
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+    command: bash
+
+volumes:
+  go-mod-cache:
+  node-modules-client:
+  node-modules-web:
