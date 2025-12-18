@@ -1,28 +1,51 @@
-import {
-  User,
-  HealthResponse,
-  LogoutResponse,
-  ErrorResponse,
-  ApiError,
-} from './types';
+/**
+ * API client for browser
+ *
+ * This is a browser-specific implementation that mirrors the
+ * TypeScript client library in client/src/client.ts
+ */
 
-export interface ClientConfig {
-  baseUrl: string;
-  credentials?: RequestCredentials;
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  picture?: string;
+}
+
+export interface HealthResponse {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  timestamp: string;
+  version?: string;
+}
+
+export interface LogoutResponse {
+  success: boolean;
+  message?: string;
+}
+
+export interface ErrorResponse {
+  error: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export class ApiError extends Error {
+  constructor(
+    public readonly statusCode: number,
+    public readonly errorCode: string,
+    message: string,
+    public readonly details?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
 }
 
 /**
- * API client for project-template server
+ * Browser API client
+ * Uses same-origin requests (no baseUrl needed since served from same server)
  */
 export class ApiClient {
-  private readonly baseUrl: string;
-  private readonly credentials: RequestCredentials;
-
-  constructor(config: ClientConfig) {
-    this.baseUrl = config.baseUrl.replace(/\/$/, ''); // Remove trailing slash
-    this.credentials = config.credentials ?? 'include'; // Include cookies by default
-  }
-
   /**
    * Check server health
    */
@@ -31,23 +54,21 @@ export class ApiClient {
   }
 
   /**
-   * Get the login URL for OAuth
-   * Note: This returns the URL to redirect to, not the actual login
+   * Get the login URL
    */
   getLoginUrl(): string {
-    return `${this.baseUrl}/auth/login`;
+    return '/auth/login';
   }
 
   /**
    * Get the current authenticated user
-   * @throws ApiError if not authenticated
    */
   async getCurrentUser(): Promise<User> {
     return this.request<User>('GET', '/auth/me');
   }
 
   /**
-   * Check if the user is authenticated
+   * Check if authenticated
    */
   async isAuthenticated(): Promise<boolean> {
     try {
@@ -62,23 +83,16 @@ export class ApiClient {
   }
 
   /**
-   * Log out the current user
-   * @throws ApiError if not authenticated
+   * Log out
    */
   async logout(): Promise<LogoutResponse> {
     return this.request<LogoutResponse>('POST', '/auth/logout');
   }
 
   /**
-   * Make an HTTP request to the API
+   * Make an HTTP request
    */
-  private async request<T>(
-    method: string,
-    path: string,
-    body?: unknown
-  ): Promise<T> {
-    const url = `${this.baseUrl}${path}`;
-
+  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const headers: Record<string, string> = {
       'Accept': 'application/json',
     };
@@ -87,17 +101,17 @@ export class ApiClient {
       headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(path, {
       method,
       headers,
-      credentials: this.credentials,
+      credentials: 'same-origin',
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
 
     if (!response.ok) {
       let errorResponse: ErrorResponse;
       try {
-        errorResponse = await response.json() as ErrorResponse;
+        errorResponse = await response.json();
       } catch {
         errorResponse = {
           error: 'unknown_error',
@@ -113,6 +127,9 @@ export class ApiClient {
       );
     }
 
-    return response.json() as Promise<T>;
+    return response.json();
   }
 }
+
+// Singleton instance for convenience
+export const api = new ApiClient();

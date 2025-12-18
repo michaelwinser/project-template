@@ -15,6 +15,7 @@ type Config struct {
 	LogLevel           string
 	LogFormat          string
 	Env                string
+	WebDir             string
 }
 
 // Load reads configuration from environment variables
@@ -29,6 +30,7 @@ func Load() *Config {
 		LogLevel:           getEnv("LOG_LEVEL", "debug"),
 		LogFormat:          getEnv("LOG_FORMAT", "json"),
 		Env:                getEnv("ENV", "development"),
+		WebDir:             getEnv("WEB_DIR", "../web"),
 	}
 }
 

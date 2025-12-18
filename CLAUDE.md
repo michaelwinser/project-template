@@ -8,7 +8,7 @@ A reference template for building web applications with:
 - Go server with Google OAuth authentication
 - TypeScript client library
 - Go CLI (thin wrapper around client functionality)
-- Vanilla TypeScript web client (MVC architecture) - *Phase 2*
+- Vanilla TypeScript web client (MVC architecture)
 
 ## Directory Structure
 
@@ -150,3 +150,48 @@ Key variables:
 2. Look for session-related entries
 3. Verify cookie is being set/sent correctly
 4. Check if session exists in memory (dev mode doesn't persist)
+
+## Web Client MVC Architecture
+
+The web client uses a vanilla TypeScript MVC pattern with strict boundaries.
+
+### Directory Structure
+
+```
+web/src/
+├── lib/           # Framework and shared code
+│   ├── model.ts   # Base Model class
+│   ├── view.ts    # Base View class
+│   ├── controller.ts  # Base Controller class
+│   ├── events.ts  # EventEmitter for observer pattern
+│   └── api.ts     # Browser API client
+├── models/        # Application models (state + business logic)
+├── views/         # DOM rendering and user interaction
+├── controllers/   # Wire models and views together
+├── app.ts         # Application composition root
+└── main.ts        # Entry point
+```
+
+### MVC Boundaries (Enforced by Linter)
+
+| Layer | Can Import From | Cannot Import From |
+|-------|-----------------|-------------------|
+| **Models** | lib/ | views/, controllers/ |
+| **Views** | lib/ | models/, controllers/ |
+| **Controllers** | lib/, models/, views/ | (no restrictions) |
+| **lib/** | (external only) | models/, views/, controllers/ |
+
+Run `make review-modularity` to check boundaries.
+
+### Shared Types
+
+Types shared between layers live in `lib/` (e.g., `lib/auth-types.ts`).
+This keeps Models and Views decoupled while allowing them to agree on data shapes.
+
+### Adding a New Feature
+
+1. Define shared types in `lib/` if needed
+2. Create Model in `models/` (state + API calls)
+3. Create View in `views/` (rendering + DOM events)
+4. Create Controller in `controllers/` (wire model ↔ view)
+5. Add to `app.ts` composition root

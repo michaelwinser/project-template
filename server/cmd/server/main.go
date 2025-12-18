@@ -29,6 +29,7 @@ func main() {
 		"version": version,
 		"address": cfg.Address(),
 		"env":     cfg.Env,
+		"web_dir": cfg.WebDir,
 	})
 
 	// Initialize auth components
@@ -43,6 +44,7 @@ func main() {
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler(version)
 	authHandler := handlers.NewAuthHandler(oauth, sessions, logging.New("auth"))
+	staticHandler := handlers.NewStaticHandler(cfg.WebDir)
 
 	// Set up routes
 	mux := http.NewServeMux()
@@ -55,6 +57,10 @@ func main() {
 	mux.HandleFunc("/auth/callback", authHandler.HandleCallback)
 	mux.HandleFunc("/auth/logout", authHandler.HandleLogout)
 	mux.HandleFunc("/auth/me", authHandler.HandleMe)
+
+	// Static files and SPA fallback
+	mux.Handle("/static/", staticHandler)
+	mux.Handle("/", staticHandler)
 
 	// Apply middleware
 	handler := middleware.RequestID(mux)
