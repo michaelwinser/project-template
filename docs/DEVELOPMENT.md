@@ -19,7 +19,7 @@ make test
 ## What's Included
 
 The dev container includes:
-- Go 1.21
+- Go 1.23
 - Node.js 20 LTS + npm
 - Make
 - git, curl, wget
@@ -38,6 +38,28 @@ The container will:
 - Forward port 8080
 - Install Go, ESLint, Prettier, and Docker extensions
 - Enable format-on-save
+
+## Production Build
+
+The production image is a self-contained ~24MB Alpine image with web assets baked in:
+
+```bash
+# Build production image
+make docker-build
+
+# Run production server
+docker-compose up server
+
+# Or run directly
+docker run -p 8080:8080 project-template-server
+```
+
+The production build uses a multi-stage Dockerfile:
+1. **Stage 1 (Node)**: Builds web assets (TypeScript → JavaScript)
+2. **Stage 2 (Go)**: Compiles the server binary
+3. **Stage 3 (Alpine)**: Minimal runtime with server + web assets
+
+No volume mounts needed - everything is in the image.
 
 ## Manual Docker Commands
 

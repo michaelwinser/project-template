@@ -30,10 +30,12 @@
 - Client log upload endpoint (POST /api/logs)
 - Enhanced request logging (size, user agent, duration)
 
-### Phase 6: Development Container
-- Dockerfile.dev with Go 1.21, Node.js 20, Make, git
+### Phase 6: Docker Infrastructure
+- Unified production Dockerfile (multi-stage: Node → Go → Alpine runtime)
+- Self-contained 24MB production image with baked-in web assets
+- Development container (Go 1.23, Node.js 20, Make, git)
 - VS Code devcontainer.json for seamless IDE integration
-- Docker Compose dev service with volume mounts
+- Docker Compose with production and dev services
 - Make targets: docker-dev, docker-shell, docker-build, docker-clean
 
 ## Upcoming Phases

@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y \
     sudo \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Go 1.21
-ENV GO_VERSION=1.21.5
+# Install Go 1.23
+ENV GO_VERSION=1.23.4
 RUN curl -fsSL https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz | tar -C /usr/local -xzf -
 ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="/home/dev/go"
