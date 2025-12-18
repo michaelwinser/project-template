@@ -1,0 +1,92 @@
+# Integration test scenarios
+# These can be translated to Stepci or similar test format
+
+version: "1.0"
+
+scenarios:
+  - name: "Health check returns healthy status"
+    steps:
+      - request:
+          method: GET
+          url: /health
+        expect:
+          status: 200
+          body:
+            status: healthy
+
+  - name: "Unauthenticated user cannot access /auth/me"
+    steps:
+      - request:
+          method: GET
+          url: /auth/me
+        expect:
+          status: 401
+          body:
+            error: not_authenticated
+
+  - name: "Unauthenticated user cannot logout"
+    steps:
+      - request:
+          method: POST
+          url: /auth/logout
+        expect:
+          status: 401
+          body:
+            error: not_authenticated
+
+  - name: "Login redirects to OAuth provider"
+    steps:
+      - request:
+          method: GET
+          url: /auth/login
+          follow_redirects: false
+        expect:
+          status: 302
+          headers:
+            Location:
+              contains: "accounts.google.com"
+
+  # Development mode tests (when GOOGLE_CLIENT_ID is not set)
+  - name: "Dev mode: user can authenticate and access protected endpoints"
+    tags: [dev-mode]
+    steps:
+      - name: "Login with dev credentials"
+        request:
+          method: GET
+          url: /auth/callback?code=dev&state=test
+          follow_redirects: false
+        expect:
+          status: 302
+        capture:
+          session_cookie: cookie.session
+
+      - name: "Access user info"
+        request:
+          method: GET
+          url: /auth/me
+          cookies:
+            session: "{{ session_cookie }}"
+        expect:
+          status: 200
+          body:
+            email: dev@localhost
+
+      - name: "Logout"
+        request:
+          method: POST
+          url: /auth/logout
+          cookies:
+            session: "{{ session_cookie }}"
+        expect:
+          status: 200
+          body:
+            success: true
+
+      - name: "Session is invalid after logout"
+        request:
+          method: GET
+          url: /auth/me
+          cookies:
+            session: "{{ session_cookie }}"
+        expect:
+          status: 401
