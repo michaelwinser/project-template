@@ -129,6 +129,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/logs:
+    post:
+      summary: Upload client logs
+      description: Accepts log entries from clients for centralized logging
+      operationId: uploadLogs
+      tags:
+        - system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientLogRequest'
+      responses:
+        '200':
+          description: Logs received successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientLogResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     sessionCookie:
@@ -195,3 +222,49 @@ components:
           type: object
           additionalProperties: true
           description: Additional error details
+
+    ClientLogRequest:
+      type: object
+      required:
+        - entries
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientLogEntry'
+          maxItems: 100
+          description: Array of log entries to upload
+
+    ClientLogEntry:
+      type: object
+      required:
+        - level
+        - message
+      properties:
+        level:
+          type: string
+          enum: [debug, info, warn, error]
+          description: Log level
+        message:
+          type: string
+          description: Log message
+        component:
+          type: string
+          description: Client component that generated the log
+        timestamp:
+          type: string
+          format: date-time
+          description: When the log was generated (ISO 8601)
+        context:
+          type: object
+          additionalProperties: true
+          description: Additional context data
+
+    ClientLogResponse:
+      type: object
+      required:
+        - received
+      properties:
+        received:
+          type: integer
+          description: Number of log entries received

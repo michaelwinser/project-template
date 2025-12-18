@@ -19,17 +19,15 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
-	// Initialize logger
-	logger := logging.New("server")
-	if cfg.LogLevel == "info" {
-		logger.SetLevel(logging.LevelInfo)
-	}
+	// Initialize logger from environment
+	logger := logging.NewFromEnv("server")
 
 	logger.Info("starting server", map[string]interface{}{
-		"version": version,
-		"address": cfg.Address(),
-		"env":     cfg.Env,
-		"web_dir": cfg.WebDir,
+		"version":   version,
+		"address":   cfg.Address(),
+		"env":       cfg.Env,
+		"web_dir":   cfg.WebDir,
+		"log_level": cfg.LogLevel,
 	})
 
 	// Initialize auth components
@@ -43,7 +41,8 @@ func main() {
 
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler(version)
-	authHandler := handlers.NewAuthHandler(oauth, sessions, logging.New("auth"))
+	authHandler := handlers.NewAuthHandler(oauth, sessions, logging.NewFromEnv("auth"))
+	logsHandler := handlers.NewLogsHandler(logging.NewFromEnv("client-logs"))
 	staticHandler := handlers.NewStaticHandler(cfg.WebDir)
 
 	// Set up routes
@@ -57,6 +56,9 @@ func main() {
 	mux.HandleFunc("/auth/callback", authHandler.HandleCallback)
 	mux.HandleFunc("/auth/logout", authHandler.HandleLogout)
 	mux.HandleFunc("/auth/me", authHandler.HandleMe)
+
+	// API routes
+	mux.HandleFunc("/api/logs", logsHandler.HandleUpload)
 
 	// Static files and SPA fallback
 	mux.Handle("/static/", staticHandler)
