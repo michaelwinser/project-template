@@ -38,10 +38,12 @@
 - Docker Compose with production and dev services
 - Make targets: docker-dev, docker-shell, docker-build, docker-clean
 
+### Phase 7: Claude-Powered Code Review Agent
+- `/review` slash command for Claude Code
+- Two-phase approach: triage (is it significant?) then deep review
+- Semantic analysis: security, architecture, logic, quality
+- Complements fast bash scripts (`make review`) for CI
+
 ## Upcoming Phases
 
-### Phase 7: Claude-Powered Review Agent
-- Semantic code review using Claude
-- Understands context, not just patterns
-- Optional deep review mode (`make review-deep`)
-- Complements fast bash scripts for CI
+(None currently planned)
